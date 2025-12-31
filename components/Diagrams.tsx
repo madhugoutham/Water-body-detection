@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Map, Server, Activity, BarChart2, Zap, Clock } from 'lucide-react';
+import { Map, Server, Activity, BarChart2, Zap, Clock, Info, MousePointerClick } from 'lucide-react';
 
 // --- DATASET MAP DIAGRAM ---
 export const DatasetMap: React.FC = () => {
@@ -28,27 +28,27 @@ export const DatasetMap: React.FC = () => {
   ];
 
   return (
-    <div className="flex flex-col items-center p-6 bg-white rounded-xl shadow-lg border border-slate-200 w-full relative overflow-hidden group">
-      <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+    <div className="flex flex-col items-center p-6 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 w-full relative overflow-hidden group transition-colors duration-300">
+      <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity text-slate-900 dark:text-white">
           <Map size={120} />
       </div>
       
-      <h3 className="font-serif text-2xl mb-2 text-slate-800 self-start z-10">Geographic Coverage</h3>
-      <p className="text-sm text-slate-500 mb-8 self-start max-w-sm z-10">
+      <h3 className="font-serif text-2xl mb-2 text-slate-800 dark:text-white self-start z-10">Geographic Coverage</h3>
+      <p className="text-sm text-slate-500 dark:text-slate-400 mb-8 self-start max-w-sm z-10">
         1,483 images collected from 147 unique locations across 44 states. Highlights include heavy sampling in coastal and lake regions.
       </p>
 
-      <div className="relative w-full aspect-video bg-slate-100 rounded-lg border border-slate-300 p-4">
+      <div className="relative w-full aspect-video bg-slate-100 dark:bg-slate-900 rounded-lg border border-slate-300 dark:border-slate-700 p-4 transition-colors">
          {/* Abstract US Shape */}
-         <svg viewBox="0 0 100 60" className="w-full h-full opacity-20 pointer-events-none">
-            <path d="M 5 10 L 30 10 L 35 30 L 50 25 L 90 5 L 95 20 L 80 40 L 85 55 L 70 55 L 50 50 L 40 55 L 20 45 L 5 25 Z" fill="#94a3b8" />
+         <svg viewBox="0 0 100 60" className="w-full h-full opacity-20 pointer-events-none dark:opacity-30">
+            <path d="M 5 10 L 30 10 L 35 30 L 50 25 L 90 5 L 95 20 L 80 40 L 85 55 L 70 55 L 50 50 L 40 55 L 20 45 L 5 25 Z" fill="currentColor" className="text-slate-400 dark:text-slate-500"/>
          </svg>
 
          {/* Data Points */}
          {locations.map((loc, i) => (
              <motion.div
                 key={i}
-                className="absolute w-3 h-3 bg-ocean rounded-full shadow-md border border-white cursor-pointer group/point"
+                className="absolute w-3 h-3 bg-ocean rounded-full shadow-md border border-white dark:border-slate-800 cursor-pointer group/point"
                 style={{ left: loc.x, top: loc.y }}
                 whileHover={{ scale: 1.5 }}
                 initial={{ scale: 0 }}
@@ -62,7 +62,7 @@ export const DatasetMap: React.FC = () => {
          ))}
       </div>
       
-      <div className="mt-6 flex justify-between w-full text-xs text-slate-500 font-mono border-t border-slate-100 pt-4">
+      <div className="mt-6 flex justify-between w-full text-xs text-slate-500 dark:text-slate-400 font-mono border-t border-slate-100 dark:border-slate-700 pt-4">
           <div className="flex items-center gap-2">
              <div className="w-2 h-2 bg-ocean rounded-full"></div> Sample Location
           </div>
@@ -74,68 +74,180 @@ export const DatasetMap: React.FC = () => {
 
 // --- ARCHITECTURE DIAGRAM ---
 export const ArchitectureDiagram: React.FC = () => {
+  const [hoveredStep, setHoveredStep] = useState<string | null>(null);
+
+  const steps = {
+    input: {
+      title: "High-Resolution Input",
+      desc: "Ingests massive satellite imagery (e.g., 21k x 12k pixels) which exceeds the memory limits of standard GPUs. This requires preprocessing before the neural network can handle it."
+    },
+    patch: {
+      title: "Patch Compression",
+      desc: "Smart Tiling: Slices large scenes into overlapping 512x512 patches. This allows the model to process 44 states worth of data on just 4GB VRAM while preserving detail."
+    },
+    model: {
+      title: "Depth-wise Separable Convolutions",
+      desc: "The Core Innovation: Splits standard convolution into spatial (depth-wise) and channel (point-wise) phases. Reduces parameters by ~40% vs standard U-Net, enabling real-time 6 FPS inference."
+    },
+    output: {
+      title: "Binary Segmentation Mask",
+      desc: "Generates pixel-perfect water masks. Patches are stitched back together using weighted blending to remove border artifacts, creating a seamless map."
+    }
+  };
+
+  const getStepClass = (step: string) => 
+    `transition-all duration-300 p-3 rounded-lg border border-transparent cursor-help relative ${
+      hoveredStep === step 
+        ? 'bg-slate-800 border-cyan-500/50 shadow-lg shadow-cyan-900/20' 
+        : 'hover:bg-slate-800/50 hover:border-slate-700'
+    }`;
+
   return (
-    <div className="flex flex-col items-center p-8 bg-slate-900 rounded-xl border border-slate-700 w-full h-full text-slate-200">
-      <div className="flex items-center gap-3 mb-6 self-start">
-        <Server className="text-cyan-400" />
-        <h3 className="font-serif text-xl text-white">U-Net+ Pipeline</h3>
+    <div className="flex flex-col items-center p-8 bg-slate-900 rounded-xl border border-slate-700 w-full h-full text-slate-200 shadow-2xl">
+      <div className="flex items-center justify-between w-full mb-6">
+        <div className="flex items-center gap-3">
+            <Server className="text-cyan-400" />
+            <h3 className="font-serif text-xl text-white">U-Net+ Pipeline</h3>
+        </div>
+        <div className="flex items-center gap-2 text-xs text-slate-500 bg-slate-800 px-3 py-1 rounded-full border border-slate-700 select-none">
+            <MousePointerClick size={14} />
+            <span>Hover stages for details</span>
+        </div>
       </div>
 
-      <div className="flex flex-col gap-4 w-full max-w-md relative">
+      <div className="flex flex-col gap-2 w-full max-w-md relative mb-6">
           {/* Step 1: Input */}
-          <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-white/10 rounded-lg border border-white/20 flex items-center justify-center text-xs font-mono text-cyan-200">
-                  1000px
+          <div 
+            className={getStepClass('input')}
+            onMouseEnter={() => setHoveredStep('input')}
+            onMouseLeave={() => setHoveredStep(null)}
+          >
+              <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 bg-white/5 rounded-lg border border-white/10 flex items-center justify-center text-xs font-mono text-cyan-200 relative overflow-hidden group">
+                      <div className="absolute inset-0 bg-cyan-500/10 group-hover:bg-cyan-500/20 transition-colors"></div>
+                      1000px
+                  </div>
+                  <div className="flex-1 h-[2px] bg-slate-700 relative">
+                      <div className="absolute right-0 -top-1 w-2 h-2 bg-slate-700 rotate-45"></div>
+                      <motion.div 
+                        initial={{ width: "0%" }}
+                        animate={{ width: hoveredStep === 'input' ? "100%" : "0%" }}
+                        className="h-full bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]"
+                      />
+                  </div>
+                  <div className="text-sm font-bold text-white w-32">Input Image</div>
               </div>
-              <div className="flex-1 h-[2px] bg-slate-700 relative">
-                  <div className="absolute right-0 -top-1 w-2 h-2 bg-slate-700 rotate-45"></div>
-              </div>
-              <div className="text-sm font-bold text-white w-32">Input Image</div>
           </div>
 
           {/* Step 2: Patch Compression */}
-          <div className="flex items-center gap-4 pl-8">
-              <div className="w-1 bg-cyan-500 h-12"></div>
-              <div className="flex-1 p-3 bg-cyan-900/30 border border-cyan-500/30 rounded text-sm text-cyan-100">
-                  <strong>Patch Compression</strong> <br/>
-                  <span className="text-xs text-cyan-300">Resizing & Tiling</span>
+          <div 
+            className={getStepClass('patch')}
+            onMouseEnter={() => setHoveredStep('patch')}
+            onMouseLeave={() => setHoveredStep(null)}
+          >
+             <div className="flex items-center gap-4 pl-8">
+                  <div className="w-1 bg-cyan-500 h-12 relative">
+                      <motion.div 
+                        animate={{ height: hoveredStep === 'patch' ? ["0%", "100%", "0%"] : "100%" }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                        className="absolute top-0 left-0 w-full bg-white opacity-50"
+                      />
+                  </div>
+                  <div className="flex-1 p-3 bg-cyan-900/20 border border-cyan-500/20 rounded text-sm text-cyan-100 group-hover:bg-cyan-900/30 transition-colors">
+                      <strong>Patch Compression</strong> <br/>
+                      <span className="text-xs text-cyan-300 opacity-80">Resizing & Tiling</span>
+                  </div>
               </div>
           </div>
 
           {/* Step 3: Encoder-Decoder */}
-          <div className="flex items-center gap-4">
-              <div className="w-16 h-24 bg-gradient-to-b from-blue-600 to-cyan-500 rounded-lg flex flex-col items-center justify-center text-[10px] text-white font-bold shadow-lg shadow-cyan-900/50 z-10">
-                  <span>Encoder</span>
-                  <div className="w-8 h-[1px] bg-white/50 my-1"></div>
-                  <span>Decoder</span>
+          <div 
+            className={getStepClass('model')}
+            onMouseEnter={() => setHoveredStep('model')}
+            onMouseLeave={() => setHoveredStep(null)}
+          >
+              <div className="flex items-center gap-4">
+                  <div className="w-16 h-24 bg-gradient-to-b from-blue-600 to-cyan-500 rounded-lg flex flex-col items-center justify-center text-[10px] text-white font-bold shadow-lg shadow-cyan-900/50 z-10 relative">
+                      {hoveredStep === 'model' && (
+                         <motion.div 
+                            layoutId="outline"
+                            className="absolute inset-0 border-2 border-white rounded-lg opacity-50"
+                         />
+                      )}
+                      <span>Encoder</span>
+                      <div className="w-8 h-[1px] bg-white/50 my-1"></div>
+                      <span>Decoder</span>
+                  </div>
+                   <div className="flex-1">
+                       <div className="text-sm font-bold text-white mb-1 flex items-center gap-2">
+                            Depth-wise Separable Conv
+                            {hoveredStep === 'model' && <Zap size={14} className="text-yellow-400 animate-pulse"/>}
+                       </div>
+                       <p className="text-xs text-slate-400 leading-tight">Replaces standard convolution to reduce parameters by 40%.</p>
+                   </div>
               </div>
-               <div className="flex-1">
-                   <div className="text-sm font-bold text-white mb-1">Depth-wise Separable Conv</div>
-                   <p className="text-xs text-slate-400 leading-tight">Replaces standard convolution to reduce parameters by 40%.</p>
-               </div>
           </div>
 
           {/* Step 4: Output */}
-          <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-emerald-500/20 rounded-lg border border-emerald-500/50 flex items-center justify-center text-xs font-mono text-emerald-300">
-                  Mask
+          <div 
+            className={getStepClass('output')}
+            onMouseEnter={() => setHoveredStep('output')}
+            onMouseLeave={() => setHoveredStep(null)}
+          >
+              <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 bg-emerald-500/10 rounded-lg border border-emerald-500/30 flex items-center justify-center text-xs font-mono text-emerald-300 relative">
+                      Mask
+                      {hoveredStep === 'output' && (
+                          <motion.div 
+                            className="absolute inset-0 bg-emerald-500/20"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                          />
+                      )}
+                  </div>
+                  <div className="flex-1 h-[2px] bg-slate-700 relative">
+                       <div className="absolute left-0 -top-1 w-2 h-2 bg-slate-700 rotate-45"></div>
+                       <motion.div 
+                        initial={{ width: "0%" }}
+                        animate={{ width: hoveredStep === 'output' ? "100%" : "0%" }}
+                        className="h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
+                      />
+                  </div>
+                  <div className="text-sm font-bold text-white w-32">Binary Map</div>
               </div>
-              <div className="flex-1 h-[2px] bg-slate-700 relative">
-                   <div className="absolute left-0 -top-1 w-2 h-2 bg-slate-700 rotate-45"></div>
-              </div>
-              <div className="text-sm font-bold text-white w-32">Binary Map</div>
           </div>
       </div>
       
-      <div className="mt-8 flex gap-4 text-xs font-mono bg-slate-800 p-3 rounded-lg w-full justify-around">
-          <div className="flex flex-col items-center">
-             <Zap size={16} className="text-yellow-400 mb-1"/>
-             <span>2.5x Speedup</span>
-          </div>
-          <div className="flex flex-col items-center">
-             <Server size={16} className="text-blue-400 mb-1"/>
-             <span>50% Less Mem</span>
-          </div>
+      {/* Dynamic Info Panel */}
+      <div className="w-full bg-slate-800 rounded-xl p-5 border border-slate-700 min-h-[100px] transition-all relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+            <Info size={80} />
+        </div>
+        <AnimatePresence mode='wait'>
+            <motion.div
+                key={hoveredStep || 'default'}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="relative z-10"
+            >
+                {hoveredStep ? (
+                    <>
+                        <h4 className="text-cyan-400 font-bold mb-2 flex items-center gap-2">
+                            {steps[hoveredStep as keyof typeof steps].title}
+                        </h4>
+                        <p className="text-sm text-slate-300 leading-relaxed">
+                            {steps[hoveredStep as keyof typeof steps].desc}
+                        </p>
+                    </>
+                ) : (
+                    <div className="flex flex-col items-center justify-center h-full text-slate-500 py-1">
+                        <p className="text-sm italic">Hover over the pipeline stages above to see technical details.</p>
+                    </div>
+                )}
+            </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );
@@ -180,18 +292,18 @@ export const PerformanceChart: React.FC = () => {
     const [hoveredModel, setHoveredModel] = useState<string | null>(null);
 
     return (
-        <div className="flex flex-col md:flex-row p-8 w-full gap-8">
+        <div className="flex flex-col md:flex-row p-8 w-full gap-8 bg-white dark:bg-slate-800 transition-colors duration-300">
             <div className="flex-1">
                 <div className="flex items-center gap-2 mb-6">
                     <Activity className="text-ocean" />
-                    <h3 className="text-2xl font-serif text-slate-900">Efficiency vs Accuracy</h3>
+                    <h3 className="text-2xl font-serif text-slate-900 dark:text-white">Efficiency vs Accuracy</h3>
                 </div>
-                <p className="text-slate-600 mb-6 leading-relaxed">
+                <p className="text-slate-600 dark:text-slate-300 mb-6 leading-relaxed">
                     While MSResNet offers slightly higher raw accuracy, it is significantly slower. U-Net+ provides the best balance, delivering high accuracy at <strong>3x the speed</strong> of complex models.
                 </p>
-                <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 inline-block">
+                <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-700 inline-block">
                     <div className="text-3xl font-bold text-ocean">6 FPS</div>
-                    <div className="text-xs uppercase font-bold text-slate-500">Inference Speed on RTX 3090</div>
+                    <div className="text-xs uppercase font-bold text-slate-500 dark:text-slate-400">Inference Speed on RTX 3090</div>
                 </div>
             </div>
 
@@ -203,9 +315,9 @@ export const PerformanceChart: React.FC = () => {
                         onMouseEnter={() => setHoveredModel(model.name)}
                         onMouseLeave={() => setHoveredModel(null)}
                     >
-                        <div className="flex justify-between text-sm font-bold text-slate-700 mb-1">
+                        <div className="flex justify-between text-sm font-bold text-slate-700 dark:text-slate-200 mb-1">
                             <span>{model.name}</span>
-                            <span className="text-slate-500">{model.f1}% F1</span>
+                            <span className="text-slate-500 dark:text-slate-400">{model.f1}% F1</span>
                         </div>
                         
                         {/* Tooltip */}
@@ -216,17 +328,17 @@ export const PerformanceChart: React.FC = () => {
                                     animate={{ opacity: 1, y: 0, x: '-50%' }}
                                     exit={{ opacity: 0, y: 5, x: '-50%' }}
                                     transition={{ duration: 0.2 }}
-                                    className="absolute left-1/2 -top-20 z-30 bg-slate-800 text-white text-xs p-3 rounded-lg shadow-xl w-56 pointer-events-none"
+                                    className="absolute left-1/2 -top-20 z-30 bg-slate-800 dark:bg-black text-white text-xs p-3 rounded-lg shadow-xl w-56 pointer-events-none"
                                 >
                                     <div className="font-bold mb-1 text-cyan-300">{model.name}</div>
                                     <div className="text-slate-300 leading-tight mb-1">{model.details}</div>
-                                    <div className="absolute bottom-[-6px] left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-800 rotate-45"></div>
+                                    <div className="absolute bottom-[-6px] left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-800 dark:bg-black rotate-45"></div>
                                 </motion.div>
                             )}
                         </AnimatePresence>
 
                         {/* Bars Container */}
-                        <div className="w-full h-8 bg-slate-100 rounded-full overflow-hidden flex relative cursor-pointer ring-offset-2 group-hover:ring-2 ring-ocean/50 transition-all">
+                        <div className="w-full h-8 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden flex relative cursor-pointer ring-offset-2 dark:ring-offset-slate-800 group-hover:ring-2 ring-ocean/50 transition-all">
                             {/* FPS Bar */}
                             <motion.div 
                                 className={`h-full ${model.color} flex items-center justify-end px-2 text-[10px] text-white font-bold relative z-10`}
