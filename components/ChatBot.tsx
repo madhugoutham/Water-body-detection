@@ -5,9 +5,8 @@
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { MessageSquare, Send, X, Bot, User, Loader2, Sparkles } from 'lucide-react';
-import { GoogleGenAI, Chat } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { motion, AnimatePresence } from 'framer-motion';
-
 // Context to feed the AI about the paper
 const SYSTEM_INSTRUCTION = `You are the AI research assistant for the "USS-Water" website. 
 Your goal is to answer questions about the paper "USS-Water: High-Resolution Satellite Mapping of U.S. Surface Water" (Scientific Reports, 2024).
@@ -71,7 +70,7 @@ export const ChatBot: React.FC = () => {
   // However, for this environment, process.env.API_KEY is assumed ready.
   const chatSession = useMemo(() => {
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenerativeAI({ apiKey: process.env.API_KEY });
       return ai.chats.create({
         model: 'gemini-3-flash-preview',
         config: {
